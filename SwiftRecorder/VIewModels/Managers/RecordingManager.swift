@@ -27,7 +27,7 @@ class RecordingManager {
 //    self.processor = processor
   }
   
-  func toogleRecording() {
+  func toggleRecording() {
     if audioService.isRecording {
       // Stop Recording
       let duration = audioService.stopRecording()

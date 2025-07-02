@@ -14,12 +14,11 @@ import SwiftUI
 final class AppManager {
   
   let audioService: AudioService
-  
-  
+  let recordingManager: RecordingManager
+  //  let processingCoordinator: ProcessingCoordinator
   
   private var modelContainer: ModelContainer
   var modelContext: ModelContext
-  
   
   
   init(modelContainer: ModelContainer) {
@@ -29,9 +28,22 @@ final class AppManager {
     self.modelContext = context
     
     self.audioService = AudioService(modelContext: context)
+//    self.processingCoordinator = ProcessingCoordinator()
+    self.recordingManager = RecordingManager(modelContext: context, audioService: self.audioService)
+    
     
     print("AppManager initialized")
     
+  }
+  
+  
+  func toggleRecording() {
+    recordingManager.toggleRecording()
+  }
+  
+  /// Deletes specific recording sessions based on offsets provided by a SwiftUI List.
+  func deleteSession(at offsets: IndexSet, sessions: [RecordingSession]) {
+    recordingManager.deleteSessions(at: offsets, in: sessions)
   }
   
 }
