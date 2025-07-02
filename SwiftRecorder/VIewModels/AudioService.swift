@@ -7,6 +7,8 @@
 
 import SwiftUI
 import AVFoundation
+import SwiftData
+
 
 @Observable
 class AudioService: NSObject {
@@ -19,9 +21,14 @@ class AudioService: NSObject {
   private var audioFile: AVAudioFile?
   private var recordingStartTime: Date?
   
-  override init() {
-    super.init()
-    checkMicrophonePermission()
+  
+  private var modelContext: ModelContext
+
+  
+   init(modelContext: ModelContext) {
+     self.modelContext = modelContext
+     super.init()
+     checkMicrophonePermission()
   }
   
   
@@ -98,8 +105,6 @@ class AudioService: NSObject {
             errorMessage = "Audio engine was not initialized properly."
             return nil
         }
-    
-    
     
     let inputNode = currentEngine.inputNode     // Get the microphone input node from the engine
     let inputFormat = inputNode.inputFormat(forBus: 0)  // Get the default audio format for the input
