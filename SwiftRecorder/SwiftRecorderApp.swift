@@ -43,11 +43,12 @@ struct SwiftRecorderApp: App {
     print("SwiftRecrorder init finished.")
   }
 
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-            .environment(appManager)
-            .modelContainer(sharedModelContainer)
-        }
-    }
+  var body: some Scene {
+    WindowGroup {
+      NavigationStack {
+        ContentView()
+          .environment(appManager)
+          .modelContainer(sharedModelContainer)
+      }
+    }}
 }
