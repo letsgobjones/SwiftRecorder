@@ -49,7 +49,7 @@ final class TranscriptionSegment {
 
 
 // Enum for managing transcription status
-enum TranscriptionStatus: String, CaseIterable {
+enum TranscriptionStatus: String, CaseIterable, Codable {
   case pending
   case processing
   case completed
