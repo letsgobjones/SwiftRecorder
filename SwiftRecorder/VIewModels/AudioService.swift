@@ -23,17 +23,17 @@ class AudioService: NSObject {
   
   
   private var modelContext: ModelContext
-
   
-   init(modelContext: ModelContext) {
-     self.modelContext = modelContext
-     super.init()
-     checkMicrophonePermission()
+  
+  init(modelContext: ModelContext) {
+    self.modelContext = modelContext
+    super.init()
+    checkMicrophonePermission()
   }
   
   
   private func checkMicrophonePermission() {
-    print("🎤 Checking microphone permission...")
+    print("Checking microphone permission...")
     
     switch AVAudioApplication.shared.recordPermission {
     case .granted:
@@ -102,9 +102,9 @@ class AudioService: NSObject {
     // Input Node and Format
     
     guard let currentEngine = engine else { //  Guard let to unwrap engine
-            errorMessage = "Audio engine was not initialized properly."
-            return nil
-        }
+      errorMessage = "Audio engine was not initialized properly."
+      return nil
+    }
     
     let inputNode = currentEngine.inputNode     // Get the microphone input node from the engine
     let inputFormat = inputNode.inputFormat(forBus: 0)  // Get the default audio format for the input
@@ -143,7 +143,7 @@ class AudioService: NSObject {
     
     // Start the Audio Engine
     do {
-       currentEngine.prepare() // Prepares the engine to start (allocates resources)
+      currentEngine.prepare() // Prepares the engine to start (allocates resources)
       try currentEngine.start() // Starts the audio flow through the engine
       isRecording = true
       recordingStartTime = Date() // Record the start time for duration calculation/segmentation
@@ -183,7 +183,4 @@ class AudioService: NSObject {
     }
     return duration
   }
-  
-  
-  
 }
