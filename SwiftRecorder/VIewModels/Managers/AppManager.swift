@@ -15,6 +15,7 @@ final class AppManager {
   
   let audioService: AudioService
   let recordingManager: RecordingManager
+  let playbackService: PlaybackService
   //  let processingCoordinator: ProcessingCoordinator
   
   private var modelContainer: ModelContainer
@@ -30,7 +31,7 @@ final class AppManager {
     self.audioService = AudioService(modelContext: context)
 //    self.processingCoordinator = ProcessingCoordinator()
     self.recordingManager = RecordingManager(modelContext: context, audioService: self.audioService)
-    
+    self.playbackService = PlaybackService(modelContext: context)
     
     print("AppManager initialized")
     
@@ -44,6 +45,12 @@ final class AppManager {
   /// Deletes specific recording sessions based on offsets provided by a SwiftUI List.
   func deleteSession(at offsets: IndexSet, sessions: [RecordingSession]) {
     recordingManager.deleteSessions(at: offsets, in: sessions)
+  }
+  
+  /// Toggles playback for a specific recording session
+  func togglePlayback(for session: RecordingSession) {
+    print("AppManager: Toggling playback for session: \(session.id)")
+    playbackService.togglePlayback(for: session)
   }
   
 }
