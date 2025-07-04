@@ -7,11 +7,11 @@
 
 import SwiftUI
 import AVFoundation
-
+import SwiftData
 
 
 @Observable
-class PlaybakService {
+class PlaybackService {
   var isPlaying = false
   var errorMessage: String?
   
@@ -19,6 +19,11 @@ class PlaybakService {
   private var playerNode: AVAudioPlayerNode? // A specific node within the engine used for playing audio files
   private var audioFile: AVAudioFile? // Represents the audio file loaded from disk for playback
   
+  private var  modelContext: ModelContext
+
+  init(modelContext: ModelContext) {
+    self.modelContext = modelContext
+  }
   
   /// Starts playback of an audio file located at the given URL.
   func play(url: URL) {
@@ -95,4 +100,25 @@ class PlaybakService {
     
     errorMessage = nil
     }
+  
+  
+ 
+  /// Toggles playback for a specific recording session
+  /// Constructs the full URL from the session's audioFilePath and toggles playback
+  func togglePlayback(for session: RecordingSession) {
+    print("PlaybackService: Toggling playback for session: \(session.id)")
+    
+    if isPlaying {
+      print("PlaybackService: Stopping current playback")
+      stop()
+    } else {
+      // Construct the full URL to the audio file
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+      let audioFileURL = documentsPath.appendingPathComponent(session.audioFilePath)
+      
+      print("PlaybackService: Starting playback from URL: \(audioFileURL)")
+      play(url: audioFileURL)
+    }
+  }
+
 }
