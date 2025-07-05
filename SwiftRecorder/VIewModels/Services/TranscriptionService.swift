@@ -19,13 +19,6 @@ class TranscriptionService {
     case noTranscriptionFound
   }
   
-  
-  
-  
-  
-  
-  
-  
   // MARK: - Public Interface
   /// The main transcription function that routes to the correct provider.
   func transcribe(audioURL: URL, with provider: TranscriptionProvider) async throws -> String {
@@ -39,20 +32,33 @@ class TranscriptionService {
   // MARK: - Apple On-Device Transcription
   
   /// Asynchronously requests permission for speech recognition.
-  private func requestSFSpeechAuthorization() async  {
-    await withCheckedContinuation { continuation in
-      SFSpeechRecognizer.requestAuthorization { _ in
-        continuation.resume()
+  private func requestSFSpeechAuthorization() async throws {
+    let authStatus = await withCheckedContinuation { continuation in
+      SFSpeechRecognizer.requestAuthorization { status in
+        continuation.resume(returning: status)
       }
     }
     
+    switch authStatus {
+    case .authorized:
+      print("TranscriptionService: Speech recognition authorized")
+    case .denied:
+      throw TranscriptionError.authorizationDenied("Speech recognition access was denied. Please grant access in Settings.")
+    case .restricted:
+      throw TranscriptionError.authorizationDenied("Speech recognition is restricted on this device.")
+    case .notDetermined:
+      throw TranscriptionError.authorizationDenied("Speech recognition authorization is not determined.")
+    @unknown default:
+      throw TranscriptionError.authorizationDenied("Unknown speech recognition authorization status.")
+    }
   }
   
   /// Transcribes audio using Apple's SFSpeechRecognizer.
   private func transcribeWithApple(audioURL: URL) async throws -> String {
+    print("TranscriptionService: Starting Apple transcription for: \(audioURL.lastPathComponent)")
     
     // Request user authorization.
-    await requestSFSpeechAuthorization()
+    try await requestSFSpeechAuthorization()
     
     // Get the speech recognizer and check availability.
     guard let recognizer = SFSpeechRecognizer(), recognizer.isAvailable else {
@@ -65,40 +71,39 @@ class TranscriptionService {
     // Force on-device recognition for privacy and offline use.
     request.requiresOnDeviceRecognition = true
     
-    //Perform the recognition task.
-    //TODO: Find out why this isn't working.
-//    do {
-//      let result = try await recognizer.recognitionTask(with: request)
-//      guard let transcription = result?.bestTranscription.formattedString else {
-//        throw TranscriptionError.noTranscriptionFound
-//      }
-//      return transcription
-//      
-//    } catch {
-//      throw TranscriptionError.recognitionFailed("Apple's recognition task failed: \(error.localizedDescription)")
-//    }
-//
-    
-    //Perform the recognition task.
+    // Perform the recognition task using continuation to make it async
     return try await withCheckedThrowingContinuation { continuation in
-        let task = recognizer.recognitionTask(with: request) { result, error in
-            if let error = error {
-                // If an error occurs, fail the async task
-                continuation.resume(throwing: TranscriptionError.recognitionFailed("Apple's recognition task failed: \(error.localizedDescription)"))
-            } else if let result = result, result.isFinal {
-                // When the recognition is final and successful, return the text
-                continuation.resume(returning: result.bestTranscription.formattedString)
-            }
-            // While result.isFinal is false, we do nothing and wait for the next update from the handler.
+      print("TranscriptionService: Starting recognition task...")
+      
+      let task = recognizer.recognitionTask(with: request) { result, error in
+        if let error = error {
+          print("TranscriptionService: Recognition failed with error: \(error.localizedDescription)")
+          continuation.resume(throwing: TranscriptionError.recognitionFailed("Apple's recognition task failed: \(error.localizedDescription)"))
+          return
         }
-        // You could store this task to cancel it later if needed.
-        _ = task
+        
+        guard let result = result else {
+          print("TranscriptionService: No result received from recognition task")
+          continuation.resume(throwing: TranscriptionError.noTranscriptionFound)
+          return
+        }
+        
+        // Check if the result is final (transcription is complete)
+        if result.isFinal {
+          let transcription = result.bestTranscription.formattedString
+          print("TranscriptionService: Final transcription received: \(transcription)")
+          
+          if transcription.isEmpty {
+            continuation.resume(throwing: TranscriptionError.noTranscriptionFound)
+          } else {
+            continuation.resume(returning: transcription)
+          }
+        }
+      }
+      
+      // Keep a reference to the task to prevent it from being deallocated
+      // The task will be automatically cancelled when the continuation completes
+      _ = task
     }
   }
 }
-
-
-
-
-
-
