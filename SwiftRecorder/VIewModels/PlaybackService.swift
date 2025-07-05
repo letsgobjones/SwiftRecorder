@@ -20,7 +20,7 @@ class PlaybackService {
   private var audioFile: AVAudioFile? // Represents the audio file loaded from disk for playback
   
   private var  modelContext: ModelContext
-
+  
   init(modelContext: ModelContext) {
     self.modelContext = modelContext
   }
@@ -64,7 +64,6 @@ class PlaybackService {
         }
       }
       
-      
       // Prepare and start the engine
       engine.prepare()
       try engine.start()
@@ -84,10 +83,7 @@ class PlaybackService {
     isPlaying = false
     
     // Release resources by setting the optionals to nil
-            // This will deallocate the engine, playerNode, and audioFile.
-    
-    
-    
+    // This will deallocate the engine, playerNode, and audioFile.
     engine = nil
     playerNode = nil
     audioFile = nil
@@ -99,10 +95,8 @@ class PlaybackService {
     }
     
     errorMessage = nil
-    }
+  }
   
-  
- 
   /// Toggles playback for a specific recording session
   /// Constructs the full URL from the session's audioFilePath and toggles playback
   func togglePlayback(for session: RecordingSession) {
@@ -120,5 +114,4 @@ class PlaybackService {
       play(url: audioFileURL)
     }
   }
-
 }
