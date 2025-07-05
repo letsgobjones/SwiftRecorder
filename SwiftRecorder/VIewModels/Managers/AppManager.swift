@@ -16,7 +16,7 @@ final class AppManager {
   let audioService: AudioService
   let recordingManager: RecordingManager
   let playbackService: PlaybackService
-  //  let processingCoordinator: ProcessingCoordinator
+    let processingCoordinator: ProcessingCoordinator
   
   private var modelContainer: ModelContainer
   var modelContext: ModelContext
@@ -29,8 +29,8 @@ final class AppManager {
     self.modelContext = context
     
     self.audioService = AudioService(modelContext: context)
-//    self.processingCoordinator = ProcessingCoordinator()
-    self.recordingManager = RecordingManager(modelContext: context, audioService: self.audioService)
+    self.processingCoordinator = ProcessingCoordinator()
+    self.recordingManager = RecordingManager(modelContext: context, audioService: self.audioService, processingCoordinator: self.processingCoordinator)
     self.playbackService = PlaybackService(modelContext: context)
     
     print("AppManager initialized")

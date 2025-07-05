@@ -14,17 +14,17 @@ import AVFoundation
 class RecordingManager {
   private var  modelContext: ModelContext
   private var audioService: AudioService
-//  private let processor: ProcessingCoordinator
+  private let processingCoordinator: ProcessingCoordinator
   
   // Internal state
   var activeSession: RecordingSession?
   
-  init(modelContext: ModelContext, audioService: AudioService) {
+  init(modelContext: ModelContext, audioService: AudioService, processingCoordinator: ProcessingCoordinator) {
     //TODO:  Add processor to init later
     
     self.modelContext = modelContext
     self.audioService = audioService
-//    self.processor = processor
+    self.processingCoordinator = processingCoordinator
   }
   
   func toggleRecording() {
