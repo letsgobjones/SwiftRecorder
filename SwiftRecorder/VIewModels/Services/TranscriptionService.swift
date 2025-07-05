@@ -8,16 +8,6 @@
 import SwiftUI
 import Speech
 
-
-// Defines the available transcription services
-enum TranscriptionProvider {
-    case appleOnDevice
-    // case google
-    // case whisper
-}
-
-
-
 class TranscriptionService {
   
   // MARK: - Error Handling
