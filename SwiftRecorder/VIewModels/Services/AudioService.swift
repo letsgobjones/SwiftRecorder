@@ -16,21 +16,17 @@ class AudioService: NSObject {
   var hasMicrophoneAccess: Bool = false
   var errorMessage: String?
   
-  
   private var engine: AVAudioEngine?
   private var audioFile: AVAudioFile?
   private var recordingStartTime: Date?
   
-  
   private var modelContext: ModelContext
-  
   
   init(modelContext: ModelContext) {
     self.modelContext = modelContext
     super.init()
     checkMicrophonePermission()
   }
-  
   
   private func checkMicrophonePermission() {
     print("Checking microphone permission...")
@@ -72,13 +68,14 @@ class AudioService: NSObject {
     }
   }
   
-  
   func startRecording() -> RecordingSession? {
     // Pre-check: Microphone Access
     guard hasMicrophoneAccess else {
       errorMessage = "Cannot start recording without microphone access."
       return nil
     }
+    
+    print("AudioService: Starting recording session")
     
     //  Audio Engine Setup
     engine = AVAudioEngine()
@@ -100,57 +97,52 @@ class AudioService: NSObject {
     }
     
     // Input Node and Format
-    
-    guard let currentEngine = engine else { //  Guard let to unwrap engine
+    guard let currentEngine = engine else {
       errorMessage = "Audio engine was not initialized properly."
       return nil
     }
     
-    let inputNode = currentEngine.inputNode     // Get the microphone input node from the engine
-    let inputFormat = inputNode.inputFormat(forBus: 0)  // Get the default audio format for the input
+    let inputNode = currentEngine.inputNode
+    let inputFormat = inputNode.inputFormat(forBus: 0)
     
-    
-    // Generate Unique Filename (Combined UUID & Timestamp)
-    let timestamp = String(format: "%.0f", Date().timeIntervalSince1970) // Get integer seconds since 1970
+    // Generate Unique Filename
+    let timestamp = String(format: "%.0f", Date().timeIntervalSince1970)
     let uuid = UUID().uuidString
     let fileName = "rec_\(timestamp)_\(uuid).m4a"
     
-    
-    // Determine File URL (FileManager)
+    // Determine File URL
     let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     let audioFileURL = documentsPath.appendingPathComponent(fileName)
     
     do {
-      // Create an AVAudioFile instance for writing to the specified URL
-      // Use the inputFormat.settings to define the audio quality (sample rate, bit depth, format)
+      // Create audio file for recording
       audioFile = try AVAudioFile(forWriting: audioFileURL, settings: inputFormat.settings)
     } catch {
       errorMessage = "Could not create audio file: \(error.localizedDescription)"
       return nil
     }
-    // Install Tap on Input Node (Real-time Audio Processing)
-    // This sets up a connection to capture audio buffers as they come from the microphone.
+    
+    // Install audio tap for recording
     inputNode.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) { [weak self] (buffer, when) in
-      // This closure is called repeatedly with audio data
       do {
-        // Write the incoming audio buffer directly to the audio file
         try self?.audioFile?.write(from: buffer)
       } catch {
-        print("Error writing buffer to file: \(error)")
-        
+        print("AudioService: Error writing buffer to file: \(error)")
       }
     }
     
     // Start the Audio Engine
     do {
-      currentEngine.prepare() // Prepares the engine to start (allocates resources)
-      try currentEngine.start() // Starts the audio flow through the engine
+      currentEngine.prepare()
+      try currentEngine.start()
       isRecording = true
-      recordingStartTime = Date() // Record the start time for duration calculation/segmentation
+      recordingStartTime = Date()
       
-      //  Create and Return New Recording Session
-      let newSession = RecordingSession(audioFilePath: fileName) // Create a new data model object
-      return newSession // Return the new session for persistence
+      // Create and Return New Recording Session
+      let newSession = RecordingSession(audioFilePath: fileName)
+      
+      print("AudioService: Recording started successfully")
+      return newSession
     } catch {
       errorMessage = "Could not start engine: \(error.localizedDescription)"
       isRecording = false
@@ -158,29 +150,31 @@ class AudioService: NSObject {
     }
   }
   
-  
   func stopRecording() -> TimeInterval {
+    print("AudioService: Stopping recording session")
+    
     guard let engine = engine else { return 0 }
     
     engine.stop()
-    //Remove the Input Node Tap
     engine.inputNode.removeTap(onBus: 0)
     
     // Calculate Recording Duration
     let duration = recordingStartTime != nil ? Date().timeIntervalSince(recordingStartTime!) : 0
     
-    audioFile = nil // Releases the strong reference to the AVAudioFile. This implicitly closes the file and flushes any pending data to disk.
-    self.engine = nil // Releases the strong reference to the AVAudioEngine. This allows the engine and its associated nodes to be deallocated.
+    // Clean up resources
+    audioFile = nil
+    self.engine = nil
     recordingStartTime = nil
     isRecording = false
     
-    
     do {
-      try AVAudioSession.sharedInstance().setActive(false) // Deactivates the app's audio session.
+      try AVAudioSession.sharedInstance().setActive(false)
+      print("AudioService: Audio session deactivated successfully")
     } catch {
-      print("Failed to deactivate audio session: \(error.localizedDescription)")
-      
+      print("AudioService: Failed to deactivate audio session: \(error.localizedDescription)")
     }
+    
+    print("AudioService: Recording stopped successfully, duration: \(duration)s")
     return duration
   }
 }
