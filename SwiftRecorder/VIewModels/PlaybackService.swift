@@ -29,6 +29,13 @@ class PlaybackService {
   func play(url: URL) {
     if isPlaying { stop() }
     
+    // Check if file exists before attempting playback
+    if !FileManager.default.fileExists(atPath: url.path) {
+      print("PlaybackService: Audio file not found at: \(url)")
+      errorMessage = "Audio file not found: \(url.lastPathComponent)"
+      return
+    }
+    
     engine = AVAudioEngine()
     playerNode = AVAudioPlayerNode()
     
@@ -42,9 +49,9 @@ class PlaybackService {
       errorMessage = "Failed to set up audio session for playback: \(error.localizedDescription)"
       return
     }
+    
     // Ensure Engine and PlayerNode are initialized
     guard let engine = engine, let playerNode = playerNode else { return }
-    
     
     do {
       // Load the audio file from the provided URL
@@ -70,9 +77,11 @@ class PlaybackService {
       
       playerNode.play()
       isPlaying = true
+      print("PlaybackService: Playback started successfully")
     } catch {
       errorMessage = "Playback failed: \(error.localizedDescription)"
       isPlaying = false
+      print("PlaybackService: Playback error: \(error)")
     }
   }
   
