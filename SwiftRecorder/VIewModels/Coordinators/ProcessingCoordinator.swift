@@ -4,8 +4,16 @@ import AVFoundation
 
 @Observable
 class ProcessingCoordinator {
-  private let transcriptionService = TranscriptionService()
+  
+  // MARK: - Dependencies
+  private let transcriptionService: TranscriptionService
   private let segmentDuration: TimeInterval = 30.0 // 30 seconds
+  
+  // MARK: - Initialization
+  init(transcriptionService: TranscriptionService) {
+    self.transcriptionService = transcriptionService
+    print("ProcessingCoordinator: Initialized with injected TranscriptionService")
+  }
   
   // MARK: - Sendable Data Structures (Internal Data Transfer Objects - DTOs)
   
