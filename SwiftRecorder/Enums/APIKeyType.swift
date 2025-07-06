@@ -31,4 +31,33 @@ enum APIKeyType: String, CaseIterable {
             return "OpenAI Whisper"
         }
     }
+  
+  
+  /// The SFSymbol icon name for the section header.
+  var iconName: String {
+          switch self {
+          case .googleSpeechToText: "cloud"
+          case .openAIWhisper: "brain"
+          }
+      }
+      
+      /// The instructional text for the section footer.
+      var instructions: [String] {
+          switch self {
+          case .googleSpeechToText:
+              return [
+                  "1. Go to console.cloud.google.com",
+                  "2. Enable Speech-to-Text API",
+                  "3. Create credentials → API Key",
+                  "4. Restrict key to Speech-to-Text API"
+              ]
+          case .openAIWhisper:
+              return [
+                  "1. Go to platform.openai.com",
+                  "2. Sign in to your account",
+                  "3. Go to API Keys section",
+                  "4. Create new secret key"
+              ]
+          }
+      }
 }
