@@ -11,6 +11,7 @@ import SwiftUI
 enum TranscriptionProvider: String, CaseIterable {
   case appleOnDevice = "apple_on_device"
   case googleSpeechToText = "google_speech_to_text"
+  case openAIWhisper = "openai_whisper"
   
   var displayName: String {
     switch self {
@@ -18,6 +19,8 @@ enum TranscriptionProvider: String, CaseIterable {
       return "Apple On-Device"
     case .googleSpeechToText:
       return "Google Speech-to-Text"
+    case .openAIWhisper:
+      return "OpenAI Whisper"
     }
   }
   
@@ -27,6 +30,8 @@ enum TranscriptionProvider: String, CaseIterable {
       return false
     case .googleSpeechToText:
       return true
+    case .openAIWhisper:
+      return true
     }
   }
   
@@ -35,6 +40,8 @@ enum TranscriptionProvider: String, CaseIterable {
     case .appleOnDevice:
       return false
     case .googleSpeechToText:
+      return true
+    case .openAIWhisper:
       return true
     }
   }
