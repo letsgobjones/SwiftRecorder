@@ -15,7 +15,8 @@ struct SettingsScreen: View {
     
     Form {
       AppInfoSection()
-      
+      ProviderSelectionView()
+
       // Google API Key Section
       APIKeySectionView(
         keyType: .googleSpeechToText,
