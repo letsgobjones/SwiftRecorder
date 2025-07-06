@@ -15,6 +15,7 @@ final class AppManager {
   
   // MARK: - Core Services
   let audioSessionManager: AudioSessionManager
+  let backgroundTaskManager: BackgroundTaskManager
   let audioService: AudioService
   let recordingManager: RecordingManager
   let playbackService: PlaybackService
@@ -35,11 +36,16 @@ final class AppManager {
     let context = modelContainer.mainContext
     self.modelContext = context
     
-    // Initialize audio session manager first
+    // Initialize managers first
     self.audioSessionManager = AudioSessionManager()
+    self.backgroundTaskManager = BackgroundTaskManager()
     
-    // Initialize core services
-    self.audioService = AudioService(modelContext: context, audioSessionManager: self.audioSessionManager)
+    // Initialize core services with dependencies
+    self.audioService = AudioService(
+      modelContext: context, 
+      audioSessionManager: self.audioSessionManager,
+      backgroundTaskManager: self.backgroundTaskManager
+    )
     self.transcriptionService = TranscriptionService()
     self.settingsViewModel = SettingsViewModel()
     

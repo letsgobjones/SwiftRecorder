@@ -20,25 +20,29 @@ class AudioSessionManager {
     var sessionError: String?
     
     // MARK: - Private Properties
+  // These tokens are used to manage NotificationCenter observers.
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
+  
     private let audioSession = AVAudioSession.sharedInstance()
     
     // MARK: - Callbacks
-    var onInterruptionBegan: (() -> Void)?
-    var onInterruptionEnded: ((Bool) -> Void)? // Bool indicates if should resume
-    var onRouteChanged: ((AudioRoute) -> Void)?
+  var onInterruptionBegan: (() -> Void)?             // Called when an audio interruption starts.
+      var onInterruptionEnded: ((Bool) -> Void)?         // Called when an audio interruption ends. The Bool indicates if system recommends resume.
+      var onRouteChanged: ((AudioRoute) -> Void)?       // Called when the audio route changes, providing the new input route.
     
     // MARK: - Initialization
-    init() {
-        print("AudioSessionManager: Initializing")
-        setupAudioSessionObservers()
-        updateCurrentRoute()
-    }
+  /// Initializes the AudioSessionManager and sets up observers for audio session events.
+      init() {
+          print("AudioSessionManager: Initializing")
+          setupAudioSessionObservers() // Register for system audio notifications.
+          updateCurrentRoute()         // Immediately determine the initial audio route.
+      }
     
+  /// Cleans up observers when the manager is deallocated to prevent memory leaks.
     deinit {
         print("AudioSessionManager: Deinitializing")
-        removeObservers()
+        removeObservers() // Remove notification observers.
     }
     
     // MARK: - Public Interface
@@ -62,12 +66,13 @@ class AudioSessionManager {
         print("AudioSessionManager: Session configured successfully")
     }
     
-    /// Deactivates audio session
-    func deactivateSession() {
+  /// Deactivates the audio session, releasing control of audio resources back to the system.
+      func deactivateSession() {
         print("AudioSessionManager: Deactivating session")
         
         do {
-            try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+          // Deactivate the session.
+          try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
             sessionError = nil
             print("AudioSessionManager: Session deactivated successfully")
         } catch {
@@ -92,9 +97,9 @@ class AudioSessionManager {
     
     /// Checks if current route is suitable for recording
     var hasViableInputRoute: Bool {
-        let inputs = audioSession.currentRoute.inputs
-        let hasInput = !inputs.isEmpty
-        
+      let inputs = audioSession.currentRoute.inputs // Get all currently active audio input ports.
+              let hasInput = !inputs.isEmpty // Check if the array of input ports is not empty.
+      
         if hasInput {
             let inputTypes = inputs.compactMap { $0.portType }
             print("AudioSessionManager: Available inputs: \(inputTypes.map { $0.rawValue })")
@@ -102,16 +107,17 @@ class AudioSessionManager {
             print("AudioSessionManager: No audio inputs available")
         }
         
-        return hasInput
+        return hasInput // Returns true if any input device is currently active.
     }
     
-    // MARK: - Private Methods
-    
+  // MARK: - Private Methods (Notification Handling & Internal Logic)
+  
+  /// Sets up NotificationCenter observers for audio session interruptions and route changes.
     private func setupAudioSessionObservers() {
         print("AudioSessionManager: Setting up observers")
         
-        // Interruption Observer
-        interruptionObserver = NotificationCenter.default.addObserver(
+      // Interruption Observer: listens for changes in audio session interruption status.
+      interruptionObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.interruptionNotification,
             object: audioSession,
             queue: .main
@@ -119,8 +125,8 @@ class AudioSessionManager {
             self?.handleInterruption(notification)
         }
         
-        // Route Change Observer
-        routeChangeObserver = NotificationCenter.default.addObserver(
+      // Route Change Observer: listens for changes in audio input/output routes.
+      routeChangeObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.routeChangeNotification,
             object: audioSession,
             queue: .main
@@ -131,6 +137,8 @@ class AudioSessionManager {
         print("AudioSessionManager: Observers set up successfully")
     }
     
+  /// Removes all previously registered NotificationCenter observers.
+      /// Crucial to call in `deinit` to prevent memory leaks and unexpected behavior.
     private func removeObservers() {
         if let observer = interruptionObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -145,7 +153,9 @@ class AudioSessionManager {
         print("AudioSessionManager: Observers removed")
     }
     
-    private func handleInterruption(_ notification: Notification) {
+  /// Handles the raw AVAudioSession.interruptionNotification.
+  private func handleInterruption(_ notification: Notification) {
+    // Extract interruption type from the notification's userInfo.
         guard let userInfo = notification.userInfo,
               let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
@@ -165,6 +175,7 @@ class AudioSessionManager {
         }
     }
     
+  /// Logic for when an audio session interruption begins.
     private func handleInterruptionBegan() {
         print("AudioSessionManager: Processing interruption began")
         
@@ -176,6 +187,7 @@ class AudioSessionManager {
         onInterruptionBegan?()
     }
     
+  /// Logic for when an audio session interruption ends.
     private func handleInterruptionEnded(_ userInfo: [AnyHashable: Any]) {
         print("AudioSessionManager: Processing interruption ended")
         
@@ -204,6 +216,7 @@ class AudioSessionManager {
         onInterruptionEnded?(shouldResume)
     }
     
+  /// Handles the raw AVAudioSession.routeChangeNotification.
     private func handleRouteChange(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
               let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
@@ -232,6 +245,7 @@ class AudioSessionManager {
         onRouteChanged?(currentRoute)
     }
     
+  /// Updates the observable route properties based on the current AVAudioSession route.
     private func updateCurrentRoute() {
         let route = audioSession.currentRoute
         
@@ -256,6 +270,7 @@ class AudioSessionManager {
         print("AudioSessionManager: Route updated - Input: \(currentRoute.displayName), Headphones: \(isHeadphonesConnected), Bluetooth: \(isBluetoothConnected)")
     }
     
+  /// Helper to convert AVAudioSession.RouteChangeReason enum to a human-readable string for logging.
     private func routeChangeDescription(_ reason: AVAudioSession.RouteChangeReason) -> String {
         switch reason {
         case .unknown: return "Unknown"

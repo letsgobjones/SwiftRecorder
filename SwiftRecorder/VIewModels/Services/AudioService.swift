@@ -21,14 +21,74 @@ class AudioService: NSObject {
   private var recordingStartTime: Date?
   private var modelContext: ModelContext
   private let audioSessionManager: AudioSessionManager
+  private let backgroundTaskManager: BackgroundTaskManager
   
-  init(modelContext: ModelContext, audioSessionManager: AudioSessionManager) {
+  init(modelContext: ModelContext, audioSessionManager: AudioSessionManager, backgroundTaskManager: BackgroundTaskManager) {
     self.modelContext = modelContext
     self.audioSessionManager = audioSessionManager
+    self.backgroundTaskManager = backgroundTaskManager
     super.init()
     
     checkMicrophonePermission()
     setupAudioSessionCallbacks()
+    setupBackgroundTaskCallbacks()
+    print("AudioService: Initialized with AudioSessionManager and BackgroundTaskManager")
+  }
+  
+  // MARK: - Background Task Integration
+  
+  private func setupBackgroundTaskCallbacks() {
+    print("AudioService: Setting up background task callbacks")
+    
+    // Handle background time expiring
+    backgroundTaskManager.onBackgroundTimeExpiring = { [weak self] in
+      print("AudioService: Background time expiring, saving current recording")
+      self?.handleBackgroundTimeExpiring()
+    }
+    
+    // Handle app entering background
+    backgroundTaskManager.onAppDidEnterBackground = { [weak self] in
+      print("AudioService: App entered background during recording")
+      self?.handleAppEnteredBackground()
+    }
+    
+    // Handle app returning to foreground
+    backgroundTaskManager.onAppWillEnterForeground = { [weak self] in
+      print("AudioService: App returning to foreground")
+      self?.handleAppEnteringForeground()
+    }
+  }
+  
+  private func handleBackgroundTimeExpiring() {
+    guard isRecording else { return }
+    
+    print("AudioService: Background time expiring, must stop recording gracefully")
+    errorMessage = "Recording stopped - background time expired"
+    
+    // This will trigger the recording manager to save the current session
+    // The actual stopping will be handled by RecordingManager
+  }
+  
+  private func handleAppEnteredBackground() {
+    guard isRecording else { return }
+    
+    print("AudioService: App entered background, recording continues")
+    errorMessage = nil // Clear any foreground-specific errors
+  }
+  
+  private func handleAppEnteringForeground() {
+    print("AudioService: App entering foreground")
+    
+    // Check if recording is still active and audio session is viable
+    if isRecording {
+      if audioSessionManager.hasViableInputRoute {
+        print("AudioService: Recording still active and viable")
+        errorMessage = nil
+      } else {
+        print("AudioService: Recording may have been affected while in background")
+        errorMessage = "Recording may have been affected while in background"
+      }
+    }
   }
   
   // MARK: - Audio Session Integration
@@ -140,6 +200,14 @@ class AudioService: NSObject {
     return audioSessionManager.shouldResumeAfterInterruption
   }
   
+  var backgroundTimeRemaining: TimeInterval {
+    return backgroundTaskManager.backgroundTimeRemaining
+  }
+  
+  var isInBackground: Bool {
+    return backgroundTaskManager.isInBackground
+  }
+  
   // MARK: - Core Recording Methods
   
   private func checkMicrophonePermission() {
@@ -188,11 +256,15 @@ class AudioService: NSObject {
     
     print("AudioService: Starting recording session")
     
+    // Begin background task for continuous recording
+    backgroundTaskManager.beginBackgroundTask(name: "Audio Recording Session")
+    
     // Configure audio session using AudioSessionManager
     do {
       try audioSessionManager.configureForRecording()
     } catch {
       errorMessage = "Failed to configure audio session: \(error.localizedDescription)"
+      backgroundTaskManager.endBackgroundTask()
       return nil
     }
     
@@ -201,6 +273,7 @@ class AudioService: NSObject {
     
     guard let currentEngine = engine else {
       errorMessage = "Audio engine was not initialized properly."
+      backgroundTaskManager.endBackgroundTask()
       return nil
     }
     
@@ -220,6 +293,7 @@ class AudioService: NSObject {
       audioFile = try AVAudioFile(forWriting: audioFileURL, settings: inputFormat.settings)
     } catch {
       errorMessage = "Could not create audio file: \(error.localizedDescription)"
+      backgroundTaskManager.endBackgroundTask()
       return nil
     }
     
@@ -247,6 +321,7 @@ class AudioService: NSObject {
     } catch {
       errorMessage = "Could not start engine: \(error.localizedDescription)"
       isRecording = false
+      backgroundTaskManager.endBackgroundTask()
       return nil
     }
   }
@@ -254,7 +329,10 @@ class AudioService: NSObject {
   func stopRecording() -> TimeInterval {
     print("AudioService: Stopping recording session")
     
-    guard let engine = engine else { return 0 }
+    guard let engine = engine else { 
+      backgroundTaskManager.endBackgroundTask()
+      return 0 
+    }
     
     engine.stop()
     engine.inputNode.removeTap(onBus: 0)
@@ -266,6 +344,9 @@ class AudioService: NSObject {
     self.engine = nil
     recordingStartTime = nil
     isRecording = false
+    
+    // End background task
+    backgroundTaskManager.endBackgroundTask()
     
     // Deactivate audio session
     audioSessionManager.deactivateSession()
