@@ -17,11 +17,20 @@ class TranscriptionService {
     case recognizerUnavailable(String)
     case recognitionFailed(String)
     case noTranscriptionFound
+    case serviceUnavailable(String)
   }
   
   // MARK: - Public Interface
   /// The main transcription function that routes to the correct provider.
   func transcribe(audioURL: URL, with provider: TranscriptionProvider) async throws -> String {
+        
+        // Safety check: Block mock data transcription
+        guard !AudioFileHelpers.isMockFile(url: audioURL) else {
+            throw TranscriptionError.serviceUnavailable("Cannot transcribe mock data")
+        }
+        
+        print("TranscriptionService: Transcribing with provider: \(provider.displayName)")
+
     switch provider {
     case .appleOnDevice:
       return try await transcribeWithApple(audioURL: audioURL)

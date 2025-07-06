@@ -55,6 +55,25 @@ class ProcessingCoordinator {
   func process(session: RecordingSession, modelContext: ModelContext) async {
     print("ProcessingCoordinator: Starting segmented processing for session: \(session.id)")
     
+    // Safety check: Skip mock data to prevent API calls
+    if AudioFileHelpers.isMockFile(path: session.audioFilePath) {
+      print("ProcessingCoordinator: Skipping mock data: \(session.audioFilePath)")
+      session.isProcessing = false
+      
+      if session.segments.isEmpty {
+        let mockSegment = TranscriptionSegment(
+          startTime: 0.0,
+          transcriptionText: "Mock preview data - no transcription performed",
+          status: .completed
+        )
+        mockSegment.session = session
+        session.segments.append(mockSegment)
+        modelContext.insert(mockSegment)
+        try? modelContext.save()
+      }
+      return
+    }
+    
     // Extract session data to avoid Sendable issues
     let sessionId = session.id
     let audioFilePath = session.audioFilePath
@@ -191,8 +210,8 @@ class ProcessingCoordinator {
     print("ProcessingCoordinator: Processing segment \(segmentIndex)")
     
     do {
-      //      Create a temporary audio file for the current segment.
-      let segmentURL = try createAudioSegmentFile(
+//      Create a temporary audio file for the current segment.
+                                          let segmentURL = try createAudioSegmentFile(
         audioFile: audioFile,
         segmentIndex: segmentIndex,
         sessionId: sessionId
@@ -224,14 +243,14 @@ class ProcessingCoordinator {
   }
   
   /// Creates a separate temporary audio file for a specific segment of the original recording.
-  /// - Parameters:
-  ///   - audioFile: The original `AVAudioFile` to read from.
-  ///   - segmentIndex: The index of the segment to extract.
-  ///   - sessionId: The ID of the parent session (used for unique filename generation).
-  /// - Returns: The URL of the newly created segment audio file.
-  /// - Throws: An error if file reading/writing fails, or if the segment has no frames.
+      /// - Parameters:
+      ///   - audioFile: The original `AVAudioFile` to read from.
+      ///   - segmentIndex: The index of the segment to extract.
+      ///   - sessionId: The ID of the parent session (used for unique filename generation).
+      /// - Returns: The URL of the newly created segment audio file.
+      /// - Throws: An error if file reading/writing fails, or if the segment has no frames.
   ///
-  private func createAudioSegmentFile(
+    private func createAudioSegmentFile(
     audioFile: AVAudioFile,
     segmentIndex: Int,
     sessionId: UUID
@@ -260,7 +279,7 @@ class ProcessingCoordinator {
     let outputFile = try AVAudioFile(forWriting: segmentURL, settings: audioFormat.settings)
     
     // Read the specific segment's frames from the original audio file.
-    // Create an empty buffer with enough capacity.
+            // Create an empty buffer with enough capacity.
     let buffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: actualFrameCount)!
     audioFile.framePosition = startFrame
     try audioFile.read(into: buffer, frameCount: actualFrameCount)
@@ -271,18 +290,18 @@ class ProcessingCoordinator {
   }
   
   // MARK: - Database Updates (MainActor with ModelContext)
-  
-  /// Updates the `RecordingSession` and its `TranscriptionSegment`s in the database
-  /// with the results obtained from audio processing.
-  /// This function must run on the `MainActor` for safe SwiftData access.
-  /// - Parameters:
-  ///   - result: The `ProcessingResult` containing all segment data and overall status.
-  ///   - modelContext: The `ModelContext` used for data operations.
+
+      /// Updates the `RecordingSession` and its `TranscriptionSegment`s in the database
+      /// with the results obtained from audio processing.
+      /// This function must run on the `MainActor` for safe SwiftData access.
+      /// - Parameters:
+      ///   - result: The `ProcessingResult` containing all segment data and overall status.
+      ///   - modelContext: The `ModelContext` used for data operations.
   @MainActor
   private func updateSessionWithResult(_ result: ProcessingResult, modelContext: ModelContext) async {
     print("ProcessingCoordinator: Updating session with results on MainActor")
     
-    //    Fetch the session by ID:
+//    Fetch the session by ID:
     let sessionId = result.sessionId
     let descriptor = FetchDescriptor<RecordingSession>(
       predicate: #Predicate { session in
@@ -310,8 +329,8 @@ class ProcessingCoordinator {
           )
           
           segment.session = session // Establish the relationship back to the parent session.
-          session.segments.append(segment) // Add to the relationship array.
-          modelContext.insert(segment) // Insert the new segment into the context.
+                              session.segments.append(segment) // Add to the relationship array.
+                              modelContext.insert(segment) // Insert the new segment into the context.
         }
       } else {
         // Update existing segments
@@ -366,7 +385,7 @@ class ProcessingCoordinator {
       }
     }
     
-    //    Finalize session processing state and save all changes.
+//    Finalize session processing state and save all changes.
     session.isProcessing = false // Mark the session as no longer processing.
     
     // Save all changes made within this @MainActor function to the database.
