@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SessionDetailView: View {
+struct SessionDetailScreen: View {
   @Bindable var session: RecordingSession
   @Environment(AppManager.self) private var appManager: AppManager
   
@@ -151,7 +151,7 @@ struct SessionDetailView: View {
   let sampleSession = PreviewContainer.sampleSession()
   
   return NavigationStack {
-    SessionDetailView(session: sampleSession)
+    SessionDetailScreen(session: sampleSession)
       .environment(appManager)
       .modelContainer(container)
   }
