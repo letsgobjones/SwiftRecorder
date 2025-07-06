@@ -53,6 +53,8 @@ class GoogleSTTService {
         let audioFile = try AVAudioFile(forReading: audioURL)
         let inputFormat = audioFile.processingFormat
         
+        print("GoogleSpeechToTextService: Input format - Sample Rate: \(inputFormat.sampleRate), Channels: \(inputFormat.channelCount)")
+        
         // Define the target format: 16kHz, mono, 16-bit PCM
         guard let outputFormat = AVAudioFormat(
             commonFormat: .pcmFormatInt16,
@@ -70,43 +72,88 @@ class GoogleSTTService {
         var convertedData = Data()
         let bufferSize: AVAudioFrameCount = 4096 // Process in chunks of 4096 frames
         
-        // Prepare buffers for conversion
-        guard let inputBuffer = AVAudioPCMBuffer(pcmFormat: inputFormat, frameCapacity: bufferSize) else {
-             throw GoogleSpeechError.audioProcessingError("Failed to create input buffer.")
+        // Create output buffer with the correct format
+        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: bufferSize) else {
+            throw GoogleSpeechError.audioProcessingError("Failed to create output buffer.")
         }
         
+        var inputBuffer: AVAudioPCMBuffer?
+        
+        audioFile.framePosition = 0 // Reset to beginning
+        
         while true {
-            let status = converter.convert(to: inputBuffer, error: nil) { inNumPackets, outStatus in
-                do {
-                    // Read a chunk from the original audio file
-                    try audioFile.read(into: inputBuffer, frameCount: bufferSize)
-                    outStatus.pointee = .haveData
-                    return inputBuffer
-                } catch {
-                    // This error indicates the end of the file or a read error
-                    outStatus.pointee = .endOfStream
-                    return nil
-                }
+            // Create input buffer for this chunk
+            guard let currentInputBuffer = AVAudioPCMBuffer(pcmFormat: inputFormat, frameCapacity: bufferSize) else {
+                throw GoogleSpeechError.audioProcessingError("Failed to create input buffer.")
             }
             
-            // Append the converted data
-            convertedData.append(bufferToData(buffer: inputBuffer))
+            // Read a chunk from the original audio file
+            do {
+                try audioFile.read(into: currentInputBuffer, frameCount: bufferSize)
+                
+                // Check if we actually read any frames
+                if currentInputBuffer.frameLength == 0 {
+                    print("GoogleSpeechToTextService: Reached end of audio file")
+                    break
+                }
+                
+                inputBuffer = currentInputBuffer
+                
+            } catch {
+                print("GoogleSpeechToTextService: Finished reading audio file")
+                break
+            }
             
-            // Stop when the converter signals the end of the stream
-            if status == .endOfStream {
+            // Convert the chunk
+            var conversionError: NSError?
+            let status = converter.convert(to: outputBuffer, error: &conversionError) { inNumPackets, outStatus in
+                outStatus.pointee = .haveData
+                return inputBuffer
+            }
+            
+            if let error = conversionError {
+                throw GoogleSpeechError.audioProcessingError("Audio conversion failed: \(error.localizedDescription)")
+            }
+            
+            if status == .error {
+                throw GoogleSpeechError.audioProcessingError("Audio conversion failed with unknown error")
+            }
+            
+            // Append the converted data if we have frames
+            if outputBuffer.frameLength > 0 {
+                let chunkData = try bufferToData(buffer: outputBuffer)
+                convertedData.append(chunkData)
+                print("GoogleSpeechToTextService: Converted chunk - \(outputBuffer.frameLength) frames, \(chunkData.count) bytes")
+            }
+            
+            // Reset the output buffer for the next chunk
+            outputBuffer.frameLength = 0
+            
+            // If we didn't fill the input buffer, we're done
+            if currentInputBuffer.frameLength < bufferSize {
                 break
             }
         }
         
-        print("GoogleSpeechToTextService: Audio conversion successful.")
+        print("GoogleSpeechToTextService: Audio conversion successful - Total size: \(convertedData.count) bytes")
         return convertedData
     }
 
     /// Helper function to extract raw audio bytes from an AVAudioPCMBuffer.
-    private func bufferToData(buffer: AVAudioPCMBuffer) -> Data {
-        let channelData = buffer.int16ChannelData!
+    private func bufferToData(buffer: AVAudioPCMBuffer) throws -> Data {
+        // Validate that we have int16 channel data
+        guard let channelData = buffer.int16ChannelData else {
+            throw GoogleSpeechError.audioProcessingError("Buffer does not contain int16 channel data")
+        }
+        
+        guard buffer.frameLength > 0 else {
+            throw GoogleSpeechError.audioProcessingError("Buffer is empty")
+        }
+        
         let frames = buffer.frameLength
         var data = Data()
+        
+        print("GoogleSpeechToTextService: Converting \(frames) frames to data")
         
         // Loop through each frame and append its little-endian byte representation.
         // LINEAR16 format expects little-endian byte order.
@@ -123,6 +170,8 @@ class GoogleSTTService {
     // MARK: - Network Request
 
     private func performTranscriptionRequest(audioData: Data, apiKey: String) async throws -> String {
+        print("GoogleSpeechToTextService: Sending request with \(audioData.count) bytes of audio data")
+        
         var request = URLRequest(url: URL(string: "\(apiURL)?key=\(apiKey)")!)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -146,6 +195,8 @@ class GoogleSTTService {
             throw GoogleSpeechError.networkError("Invalid response from server.")
         }
         
+        print("GoogleSpeechToTextService: Received HTTP \(httpResponse.statusCode)")
+        
         switch httpResponse.statusCode {
         case 200:
             break // Success
@@ -165,7 +216,7 @@ class GoogleSTTService {
             throw GoogleSpeechError.noTranscription("No transcription found in the response.")
         }
         
+        print("GoogleSpeechToTextService: Transcription successful")
         return transcript.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
-
