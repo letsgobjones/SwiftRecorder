@@ -38,7 +38,7 @@ class AppleSTTService {
   }
   
   /// Transcribes audio using Apple's SFSpeechRecognizer.
-  private func transcribeWithApple(audioURL: URL) async throws -> String {
+   func transcribe(audioURL: URL) async throws -> String {
     print("TranscriptionService: Starting Apple transcription for: \(audioURL.lastPathComponent)")
     
     // Request user authorization.
