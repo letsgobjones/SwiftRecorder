@@ -17,20 +17,21 @@ class ProcessingCoordinator {
   
   // MARK: - Sendable Data Structures (Internal Data Transfer Objects - DTOs)
   
-  
   // Sendable struct for passing individual segment data between contexts.
   struct SegmentData: Sendable {
     let index: Int
     let startTime: TimeInterval
     let transcription: String?
     let status: TranscriptionStatus
+    let provider: TranscriptionProvider?
     let errorMessage: String?
     
-    init(index: Int, startTime: TimeInterval, transcription: String? = nil, status: TranscriptionStatus, errorMessage: String? = nil) {
+    init(index: Int, startTime: TimeInterval, transcription: String? = nil, status: TranscriptionStatus, provider: TranscriptionProvider? = nil, errorMessage: String? = nil) {
       self.index = index
       self.startTime = startTime
       self.transcription = transcription
       self.status = status
+      self.provider = provider
       self.errorMessage = errorMessage
     }
   }
@@ -54,10 +55,6 @@ class ProcessingCoordinator {
   /// - Parameters:
   ///   - session: The `RecordingSession` object to be processed.
   ///   - modelContext: The `ModelContext` used for database operations.
-  
-  
-  
-  
   
   @MainActor
   func process(session: RecordingSession, modelContext: ModelContext) async {
@@ -95,7 +92,7 @@ class ProcessingCoordinator {
       print("ProcessingCoordinator: Failed to save processing state: \(error.localizedDescription)")
     }
     
-    //    Perform audio processing and transcription off the MainActor.
+    // Perform audio processing and transcription off the MainActor.
     let result = await processAudioWithoutModelContext(
       audioFilePath: audioFilePath,
       sessionId: sessionId
@@ -146,7 +143,7 @@ class ProcessingCoordinator {
       let frameCount = AVAudioFrameCount(audioFile.length)
       let sampleRate = audioFormat.sampleRate
       
-      //      Calculate number of segments based on total duration and segmentDuration.
+      // Calculate number of segments based on total duration and segmentDuration.
       let totalDuration = Double(frameCount) / sampleRate
       let numberOfSegments = Int(ceil(totalDuration / segmentDuration))
       
@@ -156,7 +153,6 @@ class ProcessingCoordinator {
       var segmentResults: [SegmentData] = []
       for segmentIndex in 0..<numberOfSegments {
         print("ProcessingCoordinator: Processing segment \(segmentIndex + 1) of \(numberOfSegments)")
-        
         
         // Call helper function to process a single segment.
         let segmentResult = await processAudioSegmentWithoutModelContext(
@@ -170,6 +166,7 @@ class ProcessingCoordinator {
           startTime: Double(segmentIndex) * segmentDuration, // Calculate segment's start time.
           transcription: segmentResult.transcription,
           status: segmentResult.success ? .completed : .failed,
+          provider: segmentResult.provider,
           errorMessage: segmentResult.errorMessage
         )
         
@@ -208,13 +205,13 @@ class ProcessingCoordinator {
   ///   - audioFile: The original `AVAudioFile` object (passed in to avoid re-loading).
   ///   - segmentIndex: The index of the current segment being processed.
   ///   - sessionId: The ID of the parent session.
-  /// - Returns: A tuple indicating success, transcription, and error message.
+  /// - Returns: A tuple indicating success, transcription, provider, and error message.
   ///
   private func processAudioSegmentWithoutModelContext(
     audioFile: AVAudioFile,
     segmentIndex: Int,
     sessionId: UUID
-  ) async -> (success: Bool, transcription: String?, errorMessage: String?) {
+  ) async -> (success: Bool, transcription: String?, provider: TranscriptionProvider?, errorMessage: String?) {
     print("ProcessingCoordinator: Processing segment \(segmentIndex)")
     
     do {
@@ -234,7 +231,7 @@ class ProcessingCoordinator {
       print("ProcessingCoordinator: Using provider: \(selectedProvider.displayName)")
       
       // Transcribe the segment using the selected provider
-      let transcription = try await transcriptionService.transcribe(
+      let result = try await transcriptionService.transcribe(
         audioURL: segmentURL,
         with: selectedProvider
       )
@@ -243,16 +240,15 @@ class ProcessingCoordinator {
       try? FileManager.default.removeItem(at: segmentURL)
       
       // For logging: create a short preview of the transcription.
-      let preview = transcription.count > 50 ? String(transcription.prefix(50)) + "..." : transcription
-      print("ProcessingCoordinator: Segment \(segmentIndex) completed with \(selectedProvider.displayName): \(preview)")
+      print("ProcessingCoordinator: Segment \(segmentIndex) completed with \(result.provider.displayName)")
       
-      return (success: true, transcription: transcription, errorMessage: nil)
-      
+      // Return the full result
+      return (success: true, transcription: result.text, provider: result.provider, errorMessage: nil)
     } catch {
       // If transcription fails for this specific segment.
       let errorMessage = error.localizedDescription
       print("ProcessingCoordinator: Segment \(segmentIndex) failed: \(errorMessage)")
-      return (success: false, transcription: nil, errorMessage: errorMessage)
+      return (success: false, transcription: nil, provider: nil, errorMessage: errorMessage)
     }
   }
   
@@ -315,7 +311,7 @@ class ProcessingCoordinator {
   private func updateSessionWithResult(_ result: ProcessingResult, modelContext: ModelContext) async {
     print("ProcessingCoordinator: Updating session with results on MainActor")
     
-//    Fetch the session by ID:
+    // Fetch the session by ID:
     let sessionId = result.sessionId
     let descriptor = FetchDescriptor<RecordingSession>(
       predicate: #Predicate { session in
@@ -399,7 +395,7 @@ class ProcessingCoordinator {
       }
     }
     
-//    Finalize session processing state and save all changes.
+    // Finalize session processing state and save all changes.
     session.isProcessing = false // Mark the session as no longer processing.
     
     // Save all changes made within this @MainActor function to the database.
