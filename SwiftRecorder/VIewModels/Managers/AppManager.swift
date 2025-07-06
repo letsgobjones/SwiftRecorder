@@ -14,6 +14,7 @@ import SwiftUI
 final class AppManager {
   
   // MARK: - Core Services
+  let audioSessionManager: AudioSessionManager
   let audioService: AudioService
   let recordingManager: RecordingManager
   let playbackService: PlaybackService
@@ -34,8 +35,11 @@ final class AppManager {
     let context = modelContainer.mainContext
     self.modelContext = context
     
-    // Initialize core services first
-    self.audioService = AudioService(modelContext: context)
+    // Initialize audio session manager first
+    self.audioSessionManager = AudioSessionManager()
+    
+    // Initialize core services
+    self.audioService = AudioService(modelContext: context, audioSessionManager: self.audioSessionManager)
     self.transcriptionService = TranscriptionService()
     self.settingsViewModel = SettingsViewModel()
     
