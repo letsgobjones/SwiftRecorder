@@ -16,8 +16,7 @@ struct ContentView: View {
   var body: some View {
     VStack {
       if sessions.isEmpty {
-        ContentUnavailableView("No Recordings Yet", systemImage: "mic.fill")
-          .padding()
+        EmptySessionsView()
       } else {
         List {
           ForEach(sessions) { session in
@@ -25,49 +24,19 @@ struct ContentView: View {
               SessionDetailScreen(session: session)
                 .environment(appManager)
             } label: {
-              VStack(alignment: .leading) {
-                Text(session.createdAt.formatted(.dateTime.day().month().year().hour().minute()))
-                  .font(.headline)
-                
-                Text("Duration: \(String(format: "%.1f", session.duration))s")
-                  .font(.caption)
-                  .foregroundColor(.gray)
-                
-                if session.isProcessing {
-                  ProgressView("Processing...").padding(.top, 2)
-                    .font(.caption2)
-                }
-              }
-              .accessibilityElement(children: .combine)
-              .accessibilityLabel("Recording from \(session.createdAt, style: .date), lasting \(String(format: "%.1f", session.duration)) seconds.")
+              SessionRowView(session: session)
             }
           }
           .onDelete { offsets in
             appManager.deleteSession(at: offsets, sessions: sessions)
           }
-        }
+        }.listStyle(PlainListStyle())
       }
       
       Spacer()
       
-      // Audio Route Indicator
-      AudioRouteIndicator(currentRoute: appManager.audioSessionManager.currentRoute)
+      RecordingControlsView(appManager: appManager)
       
-      // Recording Button
-      RecordingButton(
-        isRecording: appManager.audioService.isRecording,
-        isInterrupted: appManager.audioSessionManager.isInterrupted,
-        hasMicrophoneAccess: appManager.audioService.hasMicrophoneAccess,
-        action: appManager.toggleRecording
-      )
-      
-      // Status Messages with Background Time
-      StatusMessageView(
-        message: statusMessage,
-        isInterrupted: appManager.audioSessionManager.isInterrupted,
-        backgroundTimeRemaining: appManager.backgroundTaskManager.backgroundTimeRemaining,
-        isInBackground: appManager.backgroundTaskManager.isInBackground
-      )
     }
     .navigationTitle("Recordings")
     .toolbar {
@@ -81,20 +50,6 @@ struct ContentView: View {
         }
       }
     }
-  }
-  
-  // MARK: - Computed Properties
-  
-  private var statusMessage: String? {
-    // Prioritize background status when in background
-    if appManager.backgroundTaskManager.isInBackground && appManager.audioService.isRecording {
-      return "Recording in background"
-    }
-    
-    if let sessionError = appManager.audioSessionManager.sessionError {
-      return sessionError
-    }
-    return appManager.audioService.errorMessage
   }
 }
 
