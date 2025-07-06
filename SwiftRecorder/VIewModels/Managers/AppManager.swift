@@ -16,6 +16,8 @@ final class AppManager {
   // MARK: - Core Services
   let audioSessionManager: AudioSessionManager
   let backgroundTaskManager: BackgroundTaskManager
+  let storageManager: StorageManager
+  let performanceManager: PerformanceManager
   let audioService: AudioService
   let recordingManager: RecordingManager
   let playbackService: PlaybackService
@@ -39,6 +41,8 @@ final class AppManager {
     // Initialize managers first
     self.audioSessionManager = AudioSessionManager()
     self.backgroundTaskManager = BackgroundTaskManager()
+    self.storageManager = StorageManager()
+    self.performanceManager = PerformanceManager()
     
     // Initialize core services with dependencies
     self.audioService = AudioService(
@@ -77,6 +81,30 @@ final class AppManager {
   func deleteSession(at offsets: IndexSet, sessions: [RecordingSession]) {
     print("AppManager: Delete session requested for \(offsets.count) sessions")
     recordingManager.deleteSessions(at: offsets, in: sessions)
+    
+    // Recalculate storage after deletion
+    Task {
+      await storageManager.calculateStorageUsage()
+    }
+  }
+  
+  // MARK: - Storage Management Actions
+  func cleanupOrphanedFiles() {
+    Task {
+      await storageManager.cleanupOrphanedFiles(modelContext: modelContext)
+    }
+  }
+  
+  func cleanupOldFiles(days: Int) {
+    Task {
+      await storageManager.cleanupOldFiles(olderThanDays: days, modelContext: modelContext)
+    }
+  }
+  
+  func freeUpStorage(targetMB: Double) {
+    Task {
+      await storageManager.freeUpStorage(targetMB: targetMB, modelContext: modelContext)
+    }
   }
   
   // MARK: - Playback Actions
