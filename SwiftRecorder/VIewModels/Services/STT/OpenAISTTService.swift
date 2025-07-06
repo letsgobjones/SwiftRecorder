@@ -1,5 +1,5 @@
 //
-//  OpenAISTT.swift
+//  OpenAISTTService.swift
 //  SwiftRecorder
 //
 //  Created by Brandon Jones on 7/6/25.
@@ -9,7 +9,7 @@ import Foundation
 import AVFoundation
 
 /// OpenAI Whisper API integration with retry logic
-class OpenAISTT {
+class OpenAISTTService {
     
     private let apiURL = "https://api.openai.com/v1/audio/transcriptions"
     private let maxRetries = 3
@@ -102,10 +102,4 @@ class OpenAISTT {
         
         return whisperResponse.text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-}
-
-// MARK: - Data Models
-
-struct OpenAIWhisperResponse: Codable {
-    let text: String
 }
