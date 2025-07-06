@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: - Error Handling
-
 /// Unified error type for all transcription services
 enum TranscriptionError: LocalizedError {
     // Apple Speech Recognition Errors
@@ -17,7 +15,7 @@ enum TranscriptionError: LocalizedError {
     case recognitionFailed(String)
     case noTranscriptionFound
     
-    // Google Speech-to-Text Errors
+    // Cloud Service Errors
     case audioProcessingError(String)
     case authenticationError(String)
     case rateLimitError(String)
@@ -38,7 +36,7 @@ enum TranscriptionError: LocalizedError {
         case .recognitionFailed(let message): return "Recognition Failed: \(message)"
         case .noTranscriptionFound: return "No Transcription Found"
         
-        // Google errors
+        // Cloud service errors
         case .audioProcessingError(let message): return "Audio Error: \(message)"
         case .authenticationError(let message): return "Auth Error: \(message)"
         case .rateLimitError(let message): return "Rate Limit: \(message)"
@@ -50,10 +48,12 @@ enum TranscriptionError: LocalizedError {
         case .serviceUnavailable(let message): return "Service Unavailable: \(message)"
         case .allRetriesFailed(let message): return "All Retries Failed: \(message)"
         case .unknownError(let message): return "Unknown Error: \(message)"
+                          
+                        
         }
     }
     
-    /// Determines if the error is retryable (for Google Speech-to-Text)
+    /// Determines if the error is retryable
     var isRetryable: Bool {
         switch self {
         case .networkError, .serverError, .rateLimitError:
