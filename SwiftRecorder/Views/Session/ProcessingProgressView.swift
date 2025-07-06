@@ -37,5 +37,11 @@ struct ProcessingProgressView: View {
 }
 
 #Preview {
-    ProcessingProgressView()
+    let container = PreviewContainer.shared
+    let sampleSession = PreviewContainer.sampleSession()
+    
+    return ProcessingProgressView(session: sampleSession)
+        .padding()
+        .modelContainer(container)
 }
+
