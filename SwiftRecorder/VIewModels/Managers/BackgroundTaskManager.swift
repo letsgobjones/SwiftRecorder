@@ -17,7 +17,8 @@ class BackgroundTaskManager {
     private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
     // Tasks for modern concurrency
-    private var notificationListenerTask: Task<Void, Never>?
+    private var backgroundNotificationTask: Task<Void, Never>?
+    private var foregroundNotificationTask: Task<Void, Never>?
     private var timeRemainingMonitorTask: Task<Void, Never>?
     
     // MARK: - Callbacks
@@ -33,7 +34,9 @@ class BackgroundTaskManager {
     
     deinit {
         endBackgroundTask()
-        notificationListenerTask?.cancel()
+        backgroundNotificationTask?.cancel()
+        foregroundNotificationTask?.cancel()
+        timeRemainingMonitorTask?.cancel()
         print("BackgroundTaskManager: Deinitialized and tasks cancelled")
     }
     
@@ -80,8 +83,8 @@ class BackgroundTaskManager {
     
     /// Sets up listeners for app lifecycle notifications using async streams.
     private func setupNotificationListeners() {
-        notificationListenerTask = Task {
-            // Listen for app entering background
+        // Listen for app entering background
+        backgroundNotificationTask = Task {
             for await _ in NotificationCenter.default.notifications(named: UIApplication.didEnterBackgroundNotification) {
                 await MainActor.run {
                     print("BackgroundTaskManager: App entered background.")
@@ -89,8 +92,10 @@ class BackgroundTaskManager {
                     self.onAppDidEnterBackground?()
                 }
             }
-            
-            // Listen for app entering foreground
+        }
+        
+        // Listen for app entering foreground
+        foregroundNotificationTask = Task {
             for await _ in NotificationCenter.default.notifications(named: UIApplication.willEnterForegroundNotification) {
                 await MainActor.run {
                     print("BackgroundTaskManager: App will enter foreground.")
@@ -99,6 +104,8 @@ class BackgroundTaskManager {
                 }
             }
         }
+        
+        print("BackgroundTaskManager: Notification listeners set up")
     }
     
     /// Starts a task to periodically update the remaining background time.
