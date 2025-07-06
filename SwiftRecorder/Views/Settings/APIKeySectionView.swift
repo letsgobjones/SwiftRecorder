@@ -18,7 +18,6 @@ struct APIKeySectionView: View {
     var body: some View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
-                // Use the new, separate component structs
                 APIKeyTextField(keyType: keyType, apiKey: $apiKey)
                 APIKeyStatusIndicator(isStored: $isStored)
                 APIKeyActionButtons(apiKey: $apiKey, isStored: $isStored, onSave: onSave, onRemove: onRemove)
