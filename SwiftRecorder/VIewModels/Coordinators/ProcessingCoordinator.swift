@@ -7,12 +7,14 @@ class ProcessingCoordinator {
   
   // MARK: - Dependencies
   private let transcriptionService: TranscriptionService
+  private let performanceManager: PerformanceManager
   private let segmentDuration: TimeInterval = 30.0 // 30 seconds
   
   // MARK: - Initialization
-  init(transcriptionService: TranscriptionService) {
+  init(transcriptionService: TranscriptionService, performanceManager: PerformanceManager) {
     self.transcriptionService = transcriptionService
-    print("ProcessingCoordinator: Initialized with injected TranscriptionService")
+    self.performanceManager = performanceManager
+    print("ProcessingCoordinator: Initialized with injected TranscriptionService and PerformanceManager")
   }
   
   // MARK: - Sendable Data Structures (Internal Data Transfer Objects - DTOs)
@@ -147,30 +149,57 @@ class ProcessingCoordinator {
       let totalDuration = Double(frameCount) / sampleRate
       let numberOfSegments = Int(ceil(totalDuration / segmentDuration))
       
-      print("ProcessingCoordinator: Audio duration: \(totalDuration)s, creating \(numberOfSegments) segments")
+      // Use PerformanceManager to get optimal concurrent operations
+      let maxConcurrent = await MainActor.run {
+        performanceManager.maxConcurrentOperations
+      }
       
-      // Process all segments sequentially
+      print("ProcessingCoordinator: Audio duration: \(totalDuration)s, creating \(numberOfSegments) segments with max \(maxConcurrent) concurrent operations")
+      
+      // Process segments with controlled concurrency
       var segmentResults: [SegmentData] = []
-      for segmentIndex in 0..<numberOfSegments {
-        print("ProcessingCoordinator: Processing segment \(segmentIndex + 1) of \(numberOfSegments)")
+      
+      // Process segments in batches based on performance manager recommendations
+      for batchStart in stride(from: 0, to: numberOfSegments, by: maxConcurrent) {
+        let batchEnd = min(batchStart + maxConcurrent, numberOfSegments)
+        let batchRange = batchStart..<batchEnd
         
-        // Call helper function to process a single segment.
-        let segmentResult = await processAudioSegmentWithoutModelContext(
-          audioFile: audioFile,
-          segmentIndex: segmentIndex,
-          sessionId: sessionId
-        )
-        // Store the result of each segment.
-        let segmentData = SegmentData(
-          index: segmentIndex,
-          startTime: Double(segmentIndex) * segmentDuration, // Calculate segment's start time.
-          transcription: segmentResult.transcription,
-          status: segmentResult.success ? .completed : .failed,
-          provider: segmentResult.provider,
-          errorMessage: segmentResult.errorMessage
-        )
+        print("ProcessingCoordinator: Processing batch \(batchStart + 1)-\(batchEnd) of \(numberOfSegments) segments")
         
-        segmentResults.append(segmentData)
+        // Process batch concurrently
+        let batchResults = await withTaskGroup(of: SegmentData.self) { group in
+          for segmentIndex in batchRange {
+            group.addTask {
+              print("ProcessingCoordinator: Processing segment \(segmentIndex + 1) of \(numberOfSegments)")
+              
+              // Call helper function to process a single segment.
+              let segmentResult = await self.processAudioSegmentWithoutModelContext(
+                audioFile: audioFile,
+                segmentIndex: segmentIndex,
+                sessionId: sessionId
+              )
+              
+              // Store the result of each segment.
+              return SegmentData(
+                index: segmentIndex,
+                startTime: Double(segmentIndex) * self.segmentDuration,
+                transcription: segmentResult.transcription,
+                status: segmentResult.success ? .completed : .failed,
+                provider: segmentResult.provider,
+                errorMessage: segmentResult.errorMessage
+              )
+            }
+          }
+          
+          var batchSegmentResults: [SegmentData] = []
+          for await segmentData in group {
+            batchSegmentResults.append(segmentData)
+          }
+          return batchSegmentResults
+        }
+        
+        // Add batch results to overall results (sort by index to maintain order)
+        segmentResults.append(contentsOf: batchResults.sorted { $0.index < $1.index })
       }
       
       print("ProcessingCoordinator: Completed processing \(segmentResults.count) segments")

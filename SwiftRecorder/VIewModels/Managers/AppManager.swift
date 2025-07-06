@@ -8,7 +8,6 @@
 import SwiftData
 import SwiftUI
 
-
 @MainActor
 @Observable
 final class AppManager {
@@ -53,8 +52,11 @@ final class AppManager {
     self.transcriptionService = TranscriptionService()
     self.settingsViewModel = SettingsViewModel()
     
-    // Initialize coordinator with transcription service dependency
-    self.processingCoordinator = ProcessingCoordinator(transcriptionService: self.transcriptionService)
+    // Initialize coordinator with transcription service and performance manager dependencies
+    self.processingCoordinator = ProcessingCoordinator(
+      transcriptionService: self.transcriptionService,
+      performanceManager: self.performanceManager
+    )
     
     // Initialize recording manager with all dependencies
     self.recordingManager = RecordingManager(
