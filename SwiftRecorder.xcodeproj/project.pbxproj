@@ -6,11 +6,40 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		CA2082752E1A973800AADEBF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CAFD1A752E14F0F1004433A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CAFD1A7C2E14F0F1004433A0;
+			remoteInfo = SwiftRecorder;
+		};
+		CA2082842E1A975100AADEBF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CAFD1A752E14F0F1004433A0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CAFD1A7C2E14F0F1004433A0;
+			remoteInfo = SwiftRecorder;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		CA2082712E1A973800AADEBF /* SwiftRecorderTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftRecorderTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA20827E2E1A975100AADEBF /* SwiftRecorderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftRecorderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAFD1A7D2E14F0F1004433A0 /* SwiftRecorder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		CA2082722E1A973800AADEBF /* SwiftRecorderTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SwiftRecorderTests;
+			sourceTree = "<group>";
+		};
+		CA20827F2E1A975100AADEBF /* SwiftRecorderUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SwiftRecorderUITests;
+			sourceTree = "<group>";
+		};
 		CAEC61572E18B296000C878D /* Mock */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Mock;
@@ -24,6 +53,20 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		CA20826E2E1A973800AADEBF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA20827B2E1A975100AADEBF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CAFD1A7A2E14F0F1004433A0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -38,6 +81,8 @@
 			isa = PBXGroup;
 			children = (
 				CAFD1A7F2E14F0F1004433A0 /* SwiftRecorder */,
+				CA2082722E1A973800AADEBF /* SwiftRecorderTests */,
+				CA20827F2E1A975100AADEBF /* SwiftRecorderUITests */,
 				CAFD1A7E2E14F0F1004433A0 /* Products */,
 				CAEC61572E18B296000C878D /* Mock */,
 			);
@@ -47,6 +92,8 @@
 			isa = PBXGroup;
 			children = (
 				CAFD1A7D2E14F0F1004433A0 /* SwiftRecorder.app */,
+				CA2082712E1A973800AADEBF /* SwiftRecorderTests.xctest */,
+				CA20827E2E1A975100AADEBF /* SwiftRecorderUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -54,6 +101,52 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		CA2082702E1A973800AADEBF /* SwiftRecorderTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA2082772E1A973800AADEBF /* Build configuration list for PBXNativeTarget "SwiftRecorderTests" */;
+			buildPhases = (
+				CA20826D2E1A973800AADEBF /* Sources */,
+				CA20826E2E1A973800AADEBF /* Frameworks */,
+				CA20826F2E1A973800AADEBF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CA2082762E1A973800AADEBF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CA2082722E1A973800AADEBF /* SwiftRecorderTests */,
+			);
+			name = SwiftRecorderTests;
+			packageProductDependencies = (
+			);
+			productName = SwiftRecorderTests;
+			productReference = CA2082712E1A973800AADEBF /* SwiftRecorderTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CA20827D2E1A975100AADEBF /* SwiftRecorderUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA2082862E1A975100AADEBF /* Build configuration list for PBXNativeTarget "SwiftRecorderUITests" */;
+			buildPhases = (
+				CA20827A2E1A975100AADEBF /* Sources */,
+				CA20827B2E1A975100AADEBF /* Frameworks */,
+				CA20827C2E1A975100AADEBF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CA2082852E1A975100AADEBF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CA20827F2E1A975100AADEBF /* SwiftRecorderUITests */,
+			);
+			name = SwiftRecorderUITests;
+			packageProductDependencies = (
+			);
+			productName = SwiftRecorderUITests;
+			productReference = CA20827E2E1A975100AADEBF /* SwiftRecorderUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		CAFD1A7C2E14F0F1004433A0 /* SwiftRecorder */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CAFD1A8A2E14F0F2004433A0 /* Build configuration list for PBXNativeTarget "SwiftRecorder" */;
@@ -87,6 +180,14 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					CA2082702E1A973800AADEBF = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = CAFD1A7C2E14F0F1004433A0;
+					};
+					CA20827D2E1A975100AADEBF = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = CAFD1A7C2E14F0F1004433A0;
+					};
 					CAFD1A7C2E14F0F1004433A0 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -107,11 +208,27 @@
 			projectRoot = "";
 			targets = (
 				CAFD1A7C2E14F0F1004433A0 /* SwiftRecorder */,
+				CA2082702E1A973800AADEBF /* SwiftRecorderTests */,
+				CA20827D2E1A975100AADEBF /* SwiftRecorderUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CA20826F2E1A973800AADEBF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA20827C2E1A975100AADEBF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CAFD1A7B2E14F0F1004433A0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -122,6 +239,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		CA20826D2E1A973800AADEBF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CA20827A2E1A975100AADEBF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CAFD1A792E14F0F1004433A0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -131,7 +262,90 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		CA2082762E1A973800AADEBF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CAFD1A7C2E14F0F1004433A0 /* SwiftRecorder */;
+			targetProxy = CA2082752E1A973800AADEBF /* PBXContainerItemProxy */;
+		};
+		CA2082852E1A975100AADEBF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CAFD1A7C2E14F0F1004433A0 /* SwiftRecorder */;
+			targetProxy = CA2082842E1A975100AADEBF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		CA2082782E1A973800AADEBF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YU5RM84NC9;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.letsgobjones.SwiftRecorderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SwiftRecorder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SwiftRecorder";
+			};
+			name = Debug;
+		};
+		CA2082792E1A973800AADEBF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YU5RM84NC9;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.letsgobjones.SwiftRecorderTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SwiftRecorder.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SwiftRecorder";
+			};
+			name = Release;
+		};
+		CA2082872E1A975100AADEBF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YU5RM84NC9;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.letsgobjones.SwiftRecorderUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SwiftRecorder;
+			};
+			name = Debug;
+		};
+		CA2082882E1A975100AADEBF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YU5RM84NC9;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.letsgobjones.SwiftRecorderUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SwiftRecorder;
+			};
+			name = Release;
+		};
 		CAFD1A882E14F0F2004433A0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -316,6 +530,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		CA2082772E1A973800AADEBF /* Build configuration list for PBXNativeTarget "SwiftRecorderTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA2082782E1A973800AADEBF /* Debug */,
+				CA2082792E1A973800AADEBF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CA2082862E1A975100AADEBF /* Build configuration list for PBXNativeTarget "SwiftRecorderUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA2082872E1A975100AADEBF /* Debug */,
+				CA2082882E1A975100AADEBF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CAFD1A782E14F0F1004433A0 /* Build configuration list for PBXProject "SwiftRecorder" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
