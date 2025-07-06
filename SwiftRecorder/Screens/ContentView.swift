@@ -22,13 +22,11 @@ struct ContentView: View {
         List {
           ForEach(sessions) { session in
             NavigationLink {
-              SessionDetailView(session: session)
+              SessionDetailScreen(session: session)
                 .environment(appManager)
             } label: {
               VStack(alignment: .leading) {
-//                Text(session.createdAt, style: .date)
                 Text(session.createdAt.formatted(.dateTime.day().month().year().hour().minute()))
-
                   .font(.headline)
                 
                 Text("Duration: \(String(format: "%.1f", session.duration))s")
@@ -73,6 +71,17 @@ struct ContentView: View {
       }
     }
     .navigationTitle("Recordings")
+    .toolbar {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            NavigationLink {
+              SettingsScreen()
+                .environment(appManager)
+            } label: {
+              Image(systemName: "gear")
+                .accessibilityLabel("Settings")
+            }
+          }
+        }
   }
 }
 
