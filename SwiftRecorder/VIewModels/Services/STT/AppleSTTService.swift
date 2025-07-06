@@ -1,5 +1,5 @@
 //
-//  AppleSTTService.swift .swift
+//  AppleSTTService.swift
 //  SwiftRecorder
 //
 //  Created by Brandon Jones on 7/6/25.
@@ -7,8 +7,6 @@
 
 import SwiftUI
 import Speech
-
-
 
 // MARK: - Apple On-Device Transcription
 
@@ -55,8 +53,13 @@ class AppleSTTService {
     // Force on-device recognition for privacy and offline use.
     request.requiresOnDeviceRecognition = true
     
+    // Enable additional features for better transcription quality
+    if #available(iOS 16.0, *) {
+      request.addsPunctuation = true // Add punctuation automatically
+    }
+    
     // Perform the recognition task using continuation to make it async
-    return try await withCheckedThrowingContinuation { continuation in
+    let rawTranscription = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
       print("TranscriptionService: Starting recognition task...")
       
       let task = recognizer.recognitionTask(with: request) { result, error in
@@ -89,5 +92,39 @@ class AppleSTTService {
       // The task will be automatically cancelled when the continuation completes
       _ = task
     }
+    
+    // For iOS versions before 16.0, add basic punctuation manually
+    if #available(iOS 16.0, *) {
+      return rawTranscription
+    } else {
+      return addBasicPunctuation(to: rawTranscription)
+    }
+  }
+  
+  /// Adds basic punctuation to transcription text for iOS versions before 16.0
+  private func addBasicPunctuation(to text: String) -> String {
+    var result = text
+    
+    // Add periods at the end of sentences (basic heuristic)
+    result = result.replacingOccurrences(of: "\\b(yes|no|okay|ok|well|so|now|then|next|finally|however|therefore|meanwhile|also|furthermore|moreover|additionally|consequently|thus|hence|afterwards|later|earlier|before|after|during)\\b", with: ". $1", options: [.regularExpression, .caseInsensitive])
+    
+    // Add commas for natural pauses (basic heuristic)
+    result = result.replacingOccurrences(of: "\\b(and|but|or|yet|for|nor|so|however|nevertheless|furthermore|moreover|therefore|thus|hence|consequently|meanwhile|otherwise|instead|besides|additionally)\\b", with: ", $1", options: [.regularExpression, .caseInsensitive])
+    
+    // Add question marks for questions
+    result = result.replacingOccurrences(of: "\\b(what|when|where|who|why|how|is|are|was|were|will|would|could|should|can|do|does|did)\\b([^.!?]*?)\\b(right|correct|true|sure)\\s*$", with: "$1$2$3?", options: [.regularExpression, .caseInsensitive])
+    
+    // Capitalize first letter
+    if !result.isEmpty {
+      result = result.prefix(1).capitalized + result.dropFirst()
+    }
+    
+    // Add final period if missing punctuation
+    if !result.isEmpty && ![".", "!", "?"].contains(result.last) {
+      result += "."
+    }
+    
+    print("TranscriptionService: Added basic punctuation to Apple transcription")
+    return result
   }
 }
