@@ -5,7 +5,7 @@
 //  Created by Brandon Jones on 7/6/25.
 //
 
-import Foundation
+import SwiftUI
 
 // MARK: - Supporting Types
 
@@ -31,12 +31,12 @@ enum StorageStatus {
     }
 }
 
-private struct FileInfo {
+struct FileInfo {
     let size: Int64
     let creationDate: Date
 }
 
-private struct StorageInfo {
+struct StorageInfo {
     let totalSize: Int64
     let fileCount: Int
     let oldestDate: Date?
