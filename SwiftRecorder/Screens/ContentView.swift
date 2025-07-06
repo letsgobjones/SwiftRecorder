@@ -61,10 +61,12 @@ struct ContentView: View {
         action: appManager.toggleRecording
       )
       
-      // Status Messages
+      // Status Messages with Background Time
       StatusMessageView(
         message: statusMessage,
-        isInterrupted: appManager.audioSessionManager.isInterrupted
+        isInterrupted: appManager.audioSessionManager.isInterrupted,
+        backgroundTimeRemaining: appManager.backgroundTaskManager.backgroundTimeRemaining,
+        isInBackground: appManager.backgroundTaskManager.isInBackground
       )
     }
     .navigationTitle("Recordings")
@@ -84,6 +86,11 @@ struct ContentView: View {
   // MARK: - Computed Properties
   
   private var statusMessage: String? {
+    // Prioritize background status when in background
+    if appManager.backgroundTaskManager.isInBackground && appManager.audioService.isRecording {
+      return "Recording in background"
+    }
+    
     if let sessionError = appManager.audioSessionManager.sessionError {
       return sessionError
     }
