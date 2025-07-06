@@ -11,6 +11,7 @@ struct APIKeySectionView: View {
     let keyType: APIKeyType
     @Binding var apiKey: String
     @Binding var isStored: Bool
+    @Binding var isValidating: Bool
     
     let onSave: () -> Void
     let onRemove: () -> Void
@@ -20,7 +21,13 @@ struct APIKeySectionView: View {
             VStack(alignment: .leading, spacing: 12) {
                 APIKeyTextField(keyType: keyType, apiKey: $apiKey)
                 APIKeyStatusIndicator(isStored: $isStored)
-                APIKeyActionButtons(apiKey: $apiKey, isStored: $isStored, onSave: onSave, onRemove: onRemove)
+                APIKeyActionButtons(
+                    apiKey: $apiKey, 
+                    isStored: $isStored, 
+                    isValidating: $isValidating,
+                    onSave: onSave, 
+                    onRemove: onRemove
+                )
             }
         } header: {
             Label(keyType.displayName, systemImage: keyType.iconName)
@@ -31,7 +38,13 @@ struct APIKeySectionView: View {
 }
 
 #Preview {
-  APIKeySectionView(keyType: .googleSpeechToText, apiKey: .constant("ABC13"), isStored: .constant(true), onSave: { print("Preview: Save Tapped") },
-                    onRemove: { print("Preview: Remove Tapped") })
-  .padding()
+    APIKeySectionView(
+        keyType: .googleSpeechToText, 
+        apiKey: .constant("ABC13"), 
+        isStored: .constant(true), 
+        isValidating: .constant(false),
+        onSave: { print("Preview: Save Tapped") },
+        onRemove: { print("Preview: Remove Tapped") }
+    )
+    .padding()
 }

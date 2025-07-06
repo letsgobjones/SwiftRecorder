@@ -20,6 +20,9 @@ class SettingsViewModel {
   var isGoogleAPIKeyStored: Bool = false
   var isOpenAIAPIKeyStored: Bool = false
   
+  var isValidatingGoogleAPI: Bool = false
+  var isValidatingOpenAIAPI: Bool = false
+  
   var errorMessage: String?
   var successMessage: String?
   
@@ -63,6 +66,8 @@ class SettingsViewModel {
       return
     }
     
+    setValidationState(for: keyType, isValidating: true)
+    
     do {
       try apiKeyManager.storeAPIKey(trimmedKey, for: keyType)
       updateKeyStatus(for: keyType, isStored: true)
@@ -71,10 +76,14 @@ class SettingsViewModel {
     } catch {
       showError("Failed to save \(keyType.displayName) API key: \(error.localizedDescription)")
     }
+    
+    setValidationState(for: keyType, isValidating: false)
   }
   
   /// Removes the API key for the given service type from the Keychain.
   func removeAPIKey(for keyType: APIKeyType) {
+    setValidationState(for: keyType, isValidating: true)
+    
     do {
       try apiKeyManager.removeAPIKey(for: keyType)
       updateKeyStatus(for: keyType, isStored: false)
@@ -83,6 +92,8 @@ class SettingsViewModel {
     } catch {
       showError("Failed to remove \(keyType.displayName) API key: \(error.localizedDescription)")
     }
+    
+    setValidationState(for: keyType, isValidating: false)
   }
   
   // MARK: - Provider Selection Validation
@@ -119,6 +130,15 @@ class SettingsViewModel {
       isGoogleAPIKeyStored = isStored
     case .openAIWhisper:
       isOpenAIAPIKeyStored = isStored
+    }
+  }
+  
+  private func setValidationState(for keyType: APIKeyType, isValidating: Bool) {
+    switch keyType {
+    case .googleSpeechToText:
+      isValidatingGoogleAPI = isValidating
+    case .openAIWhisper:
+      isValidatingOpenAIAPI = isValidating
     }
   }
   

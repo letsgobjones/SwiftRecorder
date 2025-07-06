@@ -28,6 +28,10 @@ struct SettingsScreen: View {
           get: { appManager.settingsViewModel.isGoogleAPIKeyStored },
           set: { appManager.settingsViewModel.isGoogleAPIKeyStored = $0 }
         ),
+        isValidating: Binding(
+          get: { appManager.settingsViewModel.isValidatingGoogleAPI },
+          set: { appManager.settingsViewModel.isValidatingGoogleAPI = $0 }
+        ),
         onSave: { appManager.saveAPIKey(for: .googleSpeechToText) },
         onRemove: { appManager.removeAPIKey(for: .googleSpeechToText) }
       )
@@ -42,6 +46,10 @@ struct SettingsScreen: View {
         isStored: Binding(
           get: { appManager.settingsViewModel.isOpenAIAPIKeyStored },
           set: { appManager.settingsViewModel.isOpenAIAPIKeyStored = $0 }
+        ),
+        isValidating: Binding(
+          get: { appManager.settingsViewModel.isValidatingOpenAIAPI },
+          set: { appManager.settingsViewModel.isValidatingOpenAIAPI = $0 }
         ),
         onSave: { appManager.saveAPIKey(for: .openAIWhisper) },
         onRemove: { appManager.removeAPIKey(for: .openAIWhisper) }
