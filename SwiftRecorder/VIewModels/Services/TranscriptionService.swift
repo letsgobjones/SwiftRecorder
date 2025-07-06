@@ -8,6 +8,7 @@
 import SwiftUI
 import Speech
 
+
 class TranscriptionService {
   
   // MARK: - Error Handling
@@ -24,6 +25,12 @@ class TranscriptionService {
     switch provider {
     case .appleOnDevice:
       return try await transcribeWithApple(audioURL: audioURL)
+      
+    case .openAIWhisper:
+      return try await transcribeWithOpenAI(audioURL: audioURL)
+      
+    case .googleSpeechToText:
+      return try await transcribeWithGoogle(audioURL: audioURL)
     }
   }
   
@@ -105,4 +112,21 @@ class TranscriptionService {
       _ = task
     }
   }
+  
+  
+  // MARK: - OpenAI Whisper Transcription
+  //TODO: Implement OpenAI Whisper transcription service.
+  
+  private func transcribeWithOpenAI(audioURL: URL)  async throws -> String {
+    return "OPEN AI"
+  }
+  
+  // MARK: - Google Speech-to-Text Transcription
+  //TODO: Implement Google Speech-to-Text transcription service.
+  
+  
+  private func transcribeWithGoogle(audioURL: URL)  async throws -> String {
+    return "GOOGLE"
+  }
+  
 }
