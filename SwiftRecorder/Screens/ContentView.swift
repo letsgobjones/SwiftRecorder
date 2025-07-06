@@ -50,38 +50,44 @@ struct ContentView: View {
       
       Spacer()
       
-      // Recording Button: Toggles recording on/off.
-      Button(action: appManager.toggleRecording) { // Calls the toggleRecording method on AppManager.
-        Image(systemName: appManager.audioService.isRecording ? "stop.circle.fill" : "record.circle")
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: 70, height: 70)
-          .foregroundColor(appManager.audioService.isRecording ? .red : .blue)
-          .accessibilityLabel(appManager.audioService.isRecording ? "Stop Recording" : "Start Recording")
-      }
-      .padding(.bottom)
+      // Audio Route Indicator
+      AudioRouteIndicator(currentRoute: appManager.audioSessionManager.currentRoute)
       
-      // Display error messages from the audio service if any.
-      if let errorMessage = appManager.audioService.errorMessage {
-        Text(errorMessage)
-          .foregroundColor(.red)
-          .font(.footnote)
-          .multilineTextAlignment(.center)
-          .padding()
-      }
+      // Recording Button
+      RecordingButton(
+        isRecording: appManager.audioService.isRecording,
+        isInterrupted: appManager.audioSessionManager.isInterrupted,
+        hasMicrophoneAccess: appManager.audioService.hasMicrophoneAccess,
+        action: appManager.toggleRecording
+      )
+      
+      // Status Messages
+      StatusMessageView(
+        message: statusMessage,
+        isInterrupted: appManager.audioSessionManager.isInterrupted
+      )
     }
     .navigationTitle("Recordings")
     .toolbar {
-          ToolbarItem(placement: .navigationBarTrailing) {
-            NavigationLink {
-              SettingsScreen()
-                .environment(appManager)
-            } label: {
-              Image(systemName: "gear")
-                .accessibilityLabel("Settings")
-            }
-          }
+      ToolbarItem(placement: .navigationBarTrailing) {
+        NavigationLink {
+          SettingsScreen()
+            .environment(appManager)
+        } label: {
+          Image(systemName: "gear")
+            .accessibilityLabel("Settings")
         }
+      }
+    }
+  }
+  
+  // MARK: - Computed Properties
+  
+  private var statusMessage: String? {
+    if let sessionError = appManager.audioSessionManager.sessionError {
+      return sessionError
+    }
+    return appManager.audioService.errorMessage
   }
 }
 
