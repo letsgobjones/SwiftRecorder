@@ -23,15 +23,34 @@ class SettingsViewModel {
   var errorMessage: String?
   var successMessage: String?
   
+  // MARK: - Transcription Provider Selection
+  var selectedProvider: TranscriptionProvider = .appleOnDevice {
+    didSet {
+      // Save to UserDefaults whenever the selection changes
+      UserDefaults.standard.set(selectedProvider.rawValue, forKey: "selectedTranscriptionProvider")
+      print("SettingsViewModel: Selected provider changed to: \(selectedProvider.displayName)")
+    }
+  }
   
   // MARK: - Private Properties
   private let apiKeyManager = APIKeyManager.shared
   
   init() {
+    loadSelectedProvider()
     checkAllAPIKeyStatuses()
+    print("SettingsViewModel: Initialized with provider: \(selectedProvider.displayName)")
   }
   
+  // MARK: - Private Setup Methods
   
+  private func loadSelectedProvider() {
+    if let savedProvider = UserDefaults.standard.string(forKey: "selectedTranscriptionProvider"),
+       let provider = TranscriptionProvider(rawValue: savedProvider) {
+      selectedProvider = provider
+    } else {
+      selectedProvider = .appleOnDevice // Default to Apple On-Device
+    }
+  }
   
   // MARK: - Public Actions
   /// Saves the API key for the given service type to the Keychain.
@@ -64,6 +83,27 @@ class SettingsViewModel {
     } catch {
       showError("Failed to remove \(keyType.displayName) API key: \(error.localizedDescription)")
     }
+  }
+  
+  // MARK: - Provider Selection Validation
+  /// Checks if the selected provider is properly configured (has required API keys)
+  func isSelectedProviderConfigured() -> Bool {
+    switch selectedProvider {
+    case .appleOnDevice:
+      return true // Always available
+    case .googleSpeechToText:
+      return isGoogleAPIKeyStored
+    case .openAIWhisper:
+      return isOpenAIAPIKeyStored
+    }
+  }
+  
+  /// Returns a warning message if the selected provider is not properly configured
+  func getProviderWarningMessage() -> String? {
+    if !isSelectedProviderConfigured() {
+      return "⚠️ \(selectedProvider.displayName) requires an API key to function."
+    }
+    return nil
   }
   
   // MARK: - Private Helpers
@@ -106,12 +146,3 @@ class SettingsViewModel {
     }
   }
 }
-
-
-
-
-
-
-
-
-

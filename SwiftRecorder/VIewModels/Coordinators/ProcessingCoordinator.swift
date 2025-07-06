@@ -218,8 +218,8 @@ class ProcessingCoordinator {
     print("ProcessingCoordinator: Processing segment \(segmentIndex)")
     
     do {
-//      Create a temporary audio file for the current segment.
-                                          let segmentURL = try createAudioSegmentFile(
+      // Create a temporary audio file for the current segment.
+      let segmentURL = try createAudioSegmentFile(
         audioFile: audioFile,
         segmentIndex: segmentIndex,
         sessionId: sessionId
@@ -227,10 +227,16 @@ class ProcessingCoordinator {
       
       print("ProcessingCoordinator: Transcribing segment \(segmentIndex) from file: \(segmentURL.lastPathComponent)")
       
-      // Transcribe the segment using TranscriptionService.
+      // Get the selected provider from UserDefaults (since we're off MainActor and can't access AppManager)
+      let selectedProviderRaw = UserDefaults.standard.string(forKey: "selectedTranscriptionProvider") ?? TranscriptionProvider.appleOnDevice.rawValue
+      let selectedProvider = TranscriptionProvider(rawValue: selectedProviderRaw) ?? .appleOnDevice
+      
+      print("ProcessingCoordinator: Using provider: \(selectedProvider.displayName)")
+      
+      // Transcribe the segment using the selected provider
       let transcription = try await transcriptionService.transcribe(
         audioURL: segmentURL,
-        with: .appleOnDevice
+        with: selectedProvider
       )
       
       // Clean up the temporary segment file immediately after transcription.
@@ -238,7 +244,7 @@ class ProcessingCoordinator {
       
       // For logging: create a short preview of the transcription.
       let preview = transcription.count > 50 ? String(transcription.prefix(50)) + "..." : transcription
-      print("ProcessingCoordinator: Segment \(segmentIndex) completed: \(preview)")
+      print("ProcessingCoordinator: Segment \(segmentIndex) completed with \(selectedProvider.displayName): \(preview)")
       
       return (success: true, transcription: transcription, errorMessage: nil)
       
